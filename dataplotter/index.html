@@ -25,7 +25,7 @@
             float:right;
         }
     </style>
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
     <script>
         var markers = [];
@@ -92,6 +92,16 @@
             });
         });
 
+        /*
+
+        38  5.383078    52.15983562
+        19  5.38277846  52.15955173
+        5   5.38279561  52.15927368
+        26  5.38318527  52.15936671
+
+        center  5.38299485  52.15952485
+         */
+
         function plotData(data) {
             //Remove all markers
             clearMarkers();
@@ -100,28 +110,29 @@
             walkedLine.setMap(null);
             beacons = [];
 
-            var results = data.split("\n");
-            $.each(results, function(index, element){
-                if (element.length < 5) {
-                    //Skip if this is an empty line
-                    return;
-                }
-                element = JSON.parse(element);
+            //console.log();
+
+            //var results = data.split("\n");
+            $.each(JSON.parse(data), function(index, element){
+                console.log(element);
 
                 //Our location
-                var latlon = new google.maps.LatLng(element.coords.latitude, element.coords.longitude);
+                var latlon = new google.maps.LatLng(element.latitude, element.longitude);
                 addMarker(latlon);
                 latlngbounds.extend(latlon);
                 walkedLineData.push(latlon);
 
                 //Add beacon to array of unique beacons
-                var beaconid = element.beacon.uuid + '-' + element.beacon.minor + '-' + element.beacon.major;
-                if (!beacons.hasOwnProperty(beaconid)) {
-                    beacons[beaconid] = {
-                        latitude: 0,
-                        longitude: 0
-                    };
-                }
+                $.each(element.beacons, function(index, beacon){
+                    var beaconid = beacon.minor + '-' + beacon.major;
+                    if (!beacons.hasOwnProperty(beaconid)) {
+                        beacons[beaconid] = {
+                            latitude: 0,
+                            longitude: 0
+                        };
+                    }
+                });
+
             });
             console.log(beacons);
 

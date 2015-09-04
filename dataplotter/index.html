@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Simple markers</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+        #map-canvas {
+            height:80%;
+        }
+        #controls {
+            height:20%;
+        }
+        #beaconlist {
+            width: 50%;
+            float:right;
+            border:1px solid black;
+        }
+        #savebeaconlocation {
+            float:right;
+        }
+    </style>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+    <script>
+        var markers = [];
+        var beacons = [];
+        var map;
+        var walkedLineData = [
+            new google.maps.LatLng(52.160024, 5.3808976),
+            new google.maps.LatLng(52.160024, 5.3808976)
+        ];
+        var walkedLine;
+
+        function addMarker(location) {
+            var marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: 'position'
+            });
+            markers.push(marker);
+        }
+
+        function clearMarkers() {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+            markers = [];
+        }
+
+        function initialize() {
+            var myLatlng = new google.maps.LatLng(52.160024,5.3808976);
+            var mapOptions = {
+                zoom: 16,
+                center: myLatlng
+            }
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            setWalkedLine();
+        }
+
+        function setWalkedLine() {
+            walkedLine = new google.maps.Polyline({
+                path: walkedLineData,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+            walkedLine.setMap(map);
+        }
+
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+        $(function(){
+            $.getJSON("/files",{ajax: 'true'}, function(file){
+                console.log(eval(file));
+                var options = '<option disabled>Files</option>';
+                for (var i = 0; i < file.length; i++) {
+                    options += '<option value="' + file[i] + '">' + file[i] + '</option>';
+                }
+                $("select#filelist").html(options);
+            });
+            $("select#filelist").on('change', function(e) {
+                $.get(this.value,{ajax: 'true'}, function(data){
+                    plotData(data);
+                });
+            });
+        });
+
+        function plotData(data) {
+            //Remove all markers
+            clearMarkers();
+            var latlngbounds = new google.maps.LatLngBounds();
+            walkedLineData = [];
+            walkedLine.setMap(null);
+            beacons = [];
+
+            var results = data.split("\n");
+            $.each(results, function(index, element){
+                if (element.length < 5) {
+                    //Skip if this is an empty line
+                    return;
+                }
+                element = JSON.parse(element);
+
+                //Our location
+                var latlon = new google.maps.LatLng(element.coords.latitude, element.coords.longitude);
+                addMarker(latlon);
+                latlngbounds.extend(latlon);
+                walkedLineData.push(latlon);
+
+                //Add beacon to array of unique beacons
+                var beaconid = element.beacon.uuid + '-' + element.beacon.minor + '-' + element.beacon.major;
+                if (!beacons.hasOwnProperty(beaconid)) {
+                    beacons[beaconid] = {
+                        latitude: 0,
+                        longitude: 0
+                    };
+                }
+            });
+            console.log(beacons);
+
+            var beaconListHtml = '';
+            for (var index in beacons) {
+                if (beacons.hasOwnProperty(index)) {
+                    console.log(index);
+                    beaconListHtml += '<tr>' +
+                            '<td>'+index+'</td>' +
+                            '<td><input type="text" name="'+index+'lat"> Latitude</td>' +
+                            '<td><input type="text" name="'+index+'lon"> Longitude</td>' +
+                            '</tr>';
+                }
+            }
+
+            $('#savebeaconlocation').on('click', function(e) {
+                for (var index in beacons) {
+                    if (beacons.hasOwnProperty(index)) {
+                        beacons[index].latitude = $('input[name="'+index+'lat"').val();
+                        beacons[index].longitude = $('input[name="'+index+'lon"').val();
+                    }
+                }
+                console.log(beacons);
+            });
+
+            $('#beaconlist').html('<table>' + beaconListHtml + '</table>');
+
+            //Zoom to the markers
+            map.setCenter(latlngbounds.getCenter());
+            map.fitBounds(latlngbounds);
+
+            //Generate path
+            setWalkedLine();
+        }
+
+
+    </script>
+</head>
+<body>
+<div id="map-canvas"></div>
+<div id="controls">
+    <select id="filelist"></select>
+    <div id="beaconlist"></div>
+    <button id="savebeaconlocation">Save locations</button>
+</div>
+</body>
+</html>

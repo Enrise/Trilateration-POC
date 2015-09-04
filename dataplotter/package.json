@@ -1,0 +1,14 @@
+{
+  "name": "bleminer",
+  "version": "1.0.0",
+  "description": "Ble miner data plotter",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Rob Quist (Enrise)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.1"
+  }
+}

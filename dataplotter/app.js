@@ -8,6 +8,10 @@ app.get('/files', function (req, res) {
     res.send(getFiles('data'));
 });
 
+app.get('/measurements', function (req, res) {
+    res.send(getFiles('measurements'));
+});
+
 
 function getFiles(dir, files_){
     files_ = files_ || [];

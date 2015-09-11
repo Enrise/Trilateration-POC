@@ -6,3 +6,5 @@
 /build
 /captures
 /dataplotter/node_modules
+.idea
+dataplotter/.idea

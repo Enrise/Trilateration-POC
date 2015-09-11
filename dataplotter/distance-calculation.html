@@ -70,13 +70,55 @@
                     case 'simple2':
                         return this.simple2(dataset);
                         break;
+                    case 'max':
+                        return this.max(dataset);
+                        break;
+                    case 'min':
+                        return this.min(dataset);
+                        break;
                 }
             },
             simple: function(dataset) {
-                return 1;
+                var total = 0;
+                for (var i = 0; i < dataset.length; i++) {
+                    total+=dataset[i];
+                }
+                total /= dataset.length;
+
+                return total;
+            },
+            max: function(dataset) {
+                var max = 0;
+                for (var i = 0; i < dataset.length; i++) {
+                    if (dataset[i] > max) {
+                        max = dataset[i];
+                    }
+                }
+                return max;
+            },
+            min: function(dataset) {
+                var min = this.max(dataset);
+                for (var i = 0; i < dataset.length; i++) {
+                    if (dataset[i] < min) {
+                        min = dataset[i];
+                    }
+                }
+                return min;
             },
             simple2: function(dataset) {
-                return 2;
+                var total = 0;
+                var max = this.max(dataset);
+                var min = this.min(dataset);
+                var counts = 0;
+                for (var i = 0; i < dataset.length; i++) {
+                    if (dataset[i] != max && dataset[i] != min) {
+                        total+=dataset[i];
+                        counts ++;
+                    }
+                }
+                total /= counts;
+
+                return total;
             }
         }
     </script>
@@ -96,6 +138,8 @@
                 <select id="averageMethod">
                     <option value="simple">Simple (x+x+x+x/y)</option>
                     <option value="simple2">Simple without outer 2</option>
+                    <option value="max">Max()</option>
+                    <option value="min">Min()</option>
                 </select>
             </td>
             <td>
